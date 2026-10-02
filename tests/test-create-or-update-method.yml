@@ -1,0 +1,33 @@
+name: Test CreateOrUpdate method for new property
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture file to tmp
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tmp"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/minimal.yaml" "$GITHUB_WORKSPACE/tmp/minimal.yaml"
+
+      - id: action
+        uses: .
+        with:
+          valueFile: tmp/minimal.yaml
+          propertyPath: image.tag
+          value: "latest"
+          method: "CreateOrUpdate"
+          commitChange: "false"
+          updateFile: "true"
+
+      - name: Assert new property was created in file
+        run: |
+          echo "File contents:"
+          cat "$GITHUB_WORKSPACE/tmp/minimal.yaml"
+          if ! grep -q "latest" "$GITHUB_WORKSPACE/tmp/minimal.yaml"; then
+            echo "FAIL: expected 'latest' to be created in file"
+            exit 1
+          fi
+          echo "PASS: new property was created with CreateOrUpdate method"

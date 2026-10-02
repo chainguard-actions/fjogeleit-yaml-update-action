@@ -1,0 +1,40 @@
+name: Test changes map input for multiple updates
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture file to tmp
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tmp"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/app.yaml" "$GITHUB_WORKSPACE/tmp/app.yaml"
+
+      - id: action
+        uses: .
+        with:
+          changes: |
+            {
+              "tmp/app.yaml": {
+                "image.tag": "v2.0.0",
+                "replicas": "3"
+              }
+            }
+          commitChange: "false"
+          updateFile: "true"
+
+      - name: Assert file was updated with multiple changes
+        run: |
+          echo "File contents:"
+          cat "$GITHUB_WORKSPACE/tmp/app.yaml"
+          if ! grep -q "v2.0.0" "$GITHUB_WORKSPACE/tmp/app.yaml"; then
+            echo "FAIL: expected 'v2.0.0' in updated file"
+            exit 1
+          fi
+          if ! grep -q "3" "$GITHUB_WORKSPACE/tmp/app.yaml"; then
+            echo "FAIL: expected replicas '3' in updated file"
+            exit 1
+          fi
+          echo "PASS: file contains all updated values"

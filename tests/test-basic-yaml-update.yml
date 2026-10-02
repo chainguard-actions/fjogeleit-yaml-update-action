@@ -1,0 +1,32 @@
+name: Test basic YAML property update
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture file to tmp
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tmp"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/test.yaml" "$GITHUB_WORKSPACE/tmp/test.yaml"
+
+      - id: action
+        uses: .
+        with:
+          valueFile: tmp/test.yaml
+          propertyPath: image.tag
+          value: "new-tag"
+          commitChange: "false"
+          updateFile: "true"
+
+      - name: Assert file was updated
+        run: |
+          echo "File contents:"
+          cat "$GITHUB_WORKSPACE/tmp/test.yaml"
+          if ! grep -q "new-tag" "$GITHUB_WORKSPACE/tmp/test.yaml"; then
+            echo "FAIL: expected 'new-tag' in updated file"
+            exit 1
+          fi
+          echo "PASS: file contains updated value"

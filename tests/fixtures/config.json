@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "image": {
+    "tag": "old-tag"
+  },
+  "replicas": 1
+}

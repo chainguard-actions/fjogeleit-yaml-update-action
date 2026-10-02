@@ -1,0 +1,33 @@
+name: Test JSON file format update
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture file to tmp
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tmp"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/config.json" "$GITHUB_WORKSPACE/tmp/config.json"
+
+      - id: action
+        uses: .
+        with:
+          valueFile: tmp/config.json
+          propertyPath: image.tag
+          value: "v3.0.0"
+          format: "JSON"
+          commitChange: "false"
+          updateFile: "true"
+
+      - name: Assert JSON file was updated
+        run: |
+          echo "File contents:"
+          cat "$GITHUB_WORKSPACE/tmp/config.json"
+          if ! grep -q "v3.0.0" "$GITHUB_WORKSPACE/tmp/config.json"; then
+            echo "FAIL: expected 'v3.0.0' in updated JSON file"
+            exit 1
+          fi
+          echo "PASS: JSON file contains updated value"

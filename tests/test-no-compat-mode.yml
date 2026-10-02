@@ -1,0 +1,33 @@
+name: Test noCompatMode option
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture file to tmp
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tmp"
+          cp "$GITHUB_WORKSPACE/tests/fixtures/compat.yaml" "$GITHUB_WORKSPACE/tmp/compat.yaml"
+
+      - id: action
+        uses: .
+        with:
+          valueFile: tmp/compat.yaml
+          propertyPath: feature.toggle
+          value: "yes"
+          noCompatMode: "true"
+          commitChange: "false"
+          updateFile: "true"
+
+      - name: Assert file was updated without quotes around reserved word
+        run: |
+          echo "File contents:"
+          cat "$GITHUB_WORKSPACE/tmp/compat.yaml"
+          if ! grep -q "yes" "$GITHUB_WORKSPACE/tmp/compat.yaml"; then
+            echo "FAIL: expected 'yes' in updated file"
+            exit 1
+          fi
+          echo "PASS: file contains updated value in noCompatMode"
